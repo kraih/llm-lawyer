@@ -16,6 +16,11 @@ Large language models such as Llama-3 presented an opportunity for a text classi
 accuracy, but that already has a deep enough understanding of human language that it will require much less
 re-training.
 
+## Experiment 2
+
+The details of the second round can be found on the
+[SUSE blog](https://www.suse.com/c/lora-fine-tuning-llms-for-text-classification/).
+
 ## Experiment 1
 
 ### Preparation
