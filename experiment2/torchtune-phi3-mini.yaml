@@ -1,0 +1,90 @@
+output_dir: /home/sles/torchtune/phi3_mini/lora_single_device
+
+# Model arguments
+model:
+  _component_: torchtune.models.phi3.lora_phi3_mini
+  lora_attn_modules: ['q_proj', 'v_proj', 'output_proj']
+  apply_lora_to_mlp: True
+  apply_lora_to_output: False
+  lora_rank: 64
+  lora_alpha: 128
+  lora_dropout: 0.05
+
+# Tokenizer
+tokenizer:
+  _component_: torchtune.models.phi3.phi3_mini_tokenizer
+  path: /home/sles/Phi-3-mini-4k-instruct/tokenizer.model
+  max_seq_len: null
+
+# Checkpointer
+checkpointer:
+  _component_: torchtune.training.FullModelHFCheckpointer
+  checkpoint_dir: /home/sles/Phi-3-mini-4k-instruct
+  checkpoint_files: [
+    model-00001-of-00002.safetensors,
+    model-00002-of-00002.safetensors
+  ]
+  recipe_checkpoint: null
+  output_dir: ${output_dir}
+  model_type: PHI3_MINI
+resume_from_checkpoint: False
+save_adapter_weights_only: False
+
+# Dataset
+dataset:
+  _component_: torchtune.datasets.alpaca_cleaned_dataset
+  source: kraih/legaldb-training
+  packed: False
+seed: null
+shuffle: True
+
+# Fine-tuning arguments
+epochs: 1
+max_steps_per_epoch: null
+batch_size: 8
+gradient_accumulation_steps: 8
+optimizer:
+  _component_: torch.optim.AdamW
+  fused: True
+  weight_decay: 0.01
+  lr: 5e-4
+lr_scheduler:
+  _component_: torchtune.training.lr_schedulers.get_cosine_schedule_with_warmup
+  num_warmup_steps: 100
+loss:
+  _component_: torchtune.modules.loss.CEWithChunkedOutputLoss
+clip_grad_norm: null
+compile: True
+
+# Training env
+device: cuda
+
+# Memory management
+enable_activation_checkpointing: True
+enable_activation_offloading: True
+
+# Reduced precision
+dtype: bf16
+
+# Logging
+metric_logger:
+  _component_: torchtune.training.metric_logging.DiskLogger
+  log_dir: ${output_dir}/logs
+log_every_n_steps: 1
+log_peak_memory_stats: True
+
+# Profiler
+profiler:
+  _component_: torchtune.training.setup_torch_profiler
+  enabled: False
+  output_dir: /tmp/Phi-3-mini-4k-instruct/profiling_outputs
+  cpu: True
+  cuda: True
+  profile_memory: False
+  with_stack: False
+  record_shapes: True
+  with_flops: False
+  wait_steps: 5
+  warmup_steps: 5
+  active_steps: 2
+  num_cycles: 1

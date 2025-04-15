@@ -4,8 +4,9 @@
 """
 import argparse
 from datasets import load_dataset
-from datetime import datetime
+from datetime import datetime, timedelta
 import numpy as np
+from timeit import default_timer as timer
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
@@ -107,12 +108,26 @@ def get_args():
         default=model_path,
         help="path to model",
     )
+    parser.add_argument(
+        "-q",
+        "--quant",
+        type=str,
+        choices=["4", "8"],
+        default=None,
+        help="quantize model",
+    )
     return parser.parse_args()
 
 
 args = get_args()
+load_in_8bit = False
+load_in_4bit = False
+if args.quant == "8":
+    load_in_8bit = True
+elif args.quant == "4":
+    load_in_4bit = True
 model = AutoModelForCausalLM.from_pretrained(
-    args.model, device_map=device, torch_dtype=torch_dtype
+    args.model, device_map=device, torch_dtype=torch_dtype, load_in_8bit=load_in_8bit, load_in_4bit=load_in_4bit
 )
 tokenizer = AutoTokenizer.from_pretrained(args.model)
 eos_token_id = tokenizer.encode("\n")
@@ -157,6 +172,7 @@ def get_response(prompt):
 
 dataset = load_dataset("json", data_files=args.input)
 correct = 0
+start = timer()
 for data_point in dataset["train"]:
     is_legal_text = data_point["is_legal_text"]
     snippet = data_point["snippet"][:2048]
@@ -167,5 +183,8 @@ for data_point in dataset["train"]:
         correct += 1
     elif not is_legal_text and result == "no":
         correct += 1
+end = timer()
 
 print(f"Accuracy: {correct / len(dataset['train'])}")
+delta = timedelta(seconds=end - start)
+print(f"Time: {delta}")

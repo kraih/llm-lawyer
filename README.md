@@ -16,7 +16,9 @@ Large language models such as Llama-3 presented an opportunity for a text classi
 accuracy, but that already has a deep enough understanding of human language that it will require much less
 re-training.
 
-## Preparation
+## Experiment 1
+
+### Preparation
 
 You need:
 
@@ -24,7 +26,7 @@ You need:
 2. Copy of the [Meta-Llama-3-8B-Instruct](https://huggingface.co/meta-llama/Meta-Llama-3-8B-Instruct) base model.
 3. Copy of our 150.000 samples of [training data](https://huggingface.co/datasets/openSUSE/cavil-legal-text).
 
-## Process
+### Process
 
 ```bash
 # Install dependencies
@@ -44,7 +46,7 @@ python -m venv .venv
 ./.venv/bin/python test.py -i legaldb-ml-data-small.jsonl -m /tmp/Meta-Llama-3-8B-Instruct
 
 # Fine-tune Llama-3 with torchtune and LegalDB training data (takes about 8 hours with an RTX 4090)
-./.venv/bin/tune run lora_finetune_single_device --config torchtune.yaml dataset.source=kraih/legaldb-training-data
+./.venv/bin/tune run lora_finetune_single_device --config experiment1/torchtune.yaml dataset.source=kraih/legaldb-training-data
 
 # HACK: Convert Llama-3 checkpoint to a format transformers will accept
 # (see https://github.com/pytorch/torchtune/issues/832 for more)

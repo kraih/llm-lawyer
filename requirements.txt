@@ -1,7 +1,9 @@
 accelerate
+bitsandbytes
 datasets
 flask
 numpy
 torch
+torchao
 torchtune
 transformers
