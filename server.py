@@ -4,6 +4,7 @@
 """
 import argparse
 from flask import Flask, request, jsonify
+from functools import wraps
 import torch
 import numpy as np
 from transformers import AutoModelForCausalLM, AutoTokenizer
@@ -96,6 +97,13 @@ def get_args():
         default=5000,
         help="TCP port to listen on",
     )
+    parser.add_argument(
+        "-t",
+        "--token",
+        type=str,
+        default="TEST:TOKEN",
+        help="Authentication token for the API",
+    )
     return parser.parse_args()
 
 
@@ -144,7 +152,22 @@ def get_response(prompt):
     }
 
 
+def token_auth(token):
+    def decorator(f):
+        @wraps(f)
+        def decorated(*args, **kwargs):
+            auth = request.headers.get("Authorization")
+            if not auth or auth != f"Token {token}":
+                return jsonify({"message": "Unauthorized"}), 401
+            return f(*args, **kwargs)
+
+        return decorated
+
+    return decorator
+
+
 @app.route("/", methods=["POST"])
+@token_auth(args.token)
 def classify():
     snippet = request.get_data().decode("utf-8")[:2048]
     response = get_response(get_prompt(snippet))
